@@ -1,6 +1,12 @@
 #inventory managemant system by arun
-
-
+def view_table(table_name):
+  cu.execute(f"select * from {table_name}")
+  details = cu.fetchall()
+  columns = [col[0] for col in cu.description]
+  print(*columns, sep=" ")
+  for row in details:
+    print(row)
+  
 #connectig the data base
 import mysql.connector as db
 
@@ -8,140 +14,145 @@ con = db.connect(user='root',database = 'inventory_db',host = 'localhost',\
                  password = 'sql@123')
 
 cu = con.cursor()
+owner_username = "arun@vcube"
+owner_password = "vcube@123"
 
 role = input("Are you a owner or customer : ").lower()
 #owner code
 if role == "owner":
   print("Hello, Good Morning")
+  uname = input("Enter username : ")
+  upass = input("Enter password : ")
+  if uname == owner_username and upass == owner_password :
+    while True:
+      choice = int(input('''Choose one option
+      1.Add items to inventory
+      2.Remove item
+      3.update item
+      4.view inventory
+      5.view user Details
+      6.Total Revenue 
+      7.exit  :  '''))
 
-  while True:
-    choice = int(input('''Choose one option
-    1.Add items to inventory
-    2.Remove item
-    3.update item
-    4.view inventory
-    5.view user Details
-    6.Total Revenue 
-    7.exit  :  '''))
-
-    if choice == 1:
-      
-      adding = True
-      while adding:
-        item = input("Enter item name : ").lower()
-        #check if item exits in table
-        cu.execute("select 1  from inventory where item_name = %s",[item])
-        exists = cu.fetchone()
-    
-        if exists:
-          print("This item alredy exists ")
-          
-        else:
-          cost_price = float(input("Enter item cost price : "))
-          selling_price = int(input("Enter item selling price: "))
-          quant = int(input("Enter item quantity : "))
-
-          cu.execute("insert into inventory (item_name,quantity,cost_price,sell_price) values (%s,%s,%s,%s)",[item,quant,cost_price,selling_price])
-          con.commit()
-          print("Item dded successfully")
-        ch = input("Do you want to add more items? (yes/no)").lower()
-        if ch == "no":
-          adding = False
-
-
-    #remove items
-    elif choice == 2:
-      removing = True
-      while removing:
-        cu.execute("select count(*) from inventory")
-        number_of_items = cu.fetchone()[0]
-        if number_of_items == 0:
-          print("store  is empty")
-        else:
-          item = input("Enter item name you want to remove  : ")
-          cu.execute("select 1 from inventory where item_name = %s",[item])
-          exists = cu.fetchone()
+      if choice == 1:
         
-          if exists:
-            cu.execute("delete from inventory where item_name = %s",[item])
-            con.commit()
-          else:
-            print("item not found")
-          ch = input("Do you want to remove more items? (yes/no)").lower()
-          if ch == "no":
-            removing  = False
-            
-
-    #update
-    elif choice == 3:
-      updating = True
-      while updating:
-        cu.execute("select count(*) from inventory")
-        exists = cu.fetchone()[0]
-        if exists>0:
-          item = input("Enter item name you want to update  : ")
-          cu.execute("select 1 from inventory where item_name = %s",[item])
+        adding = True
+        while adding:
+          item = input("Enter item name : ").lower()
+          #check if item exits in table
+          cu.execute("select 1  from inventory where item_name = %s",[item])
           exists = cu.fetchone()
+      
           if exists:
-            opt = int(input('''enter one option
-            1.update cost
-            2.update quantity '''))
-            if opt == 1:
-                cost_price = float(input(f"Enter new cost price of {item}: "))
-                selling_price = float(input(f"Enter new selling price of {item}: "))
-
-                cu.execute(
-                    "UPDATE inventory SET cost_price=%s, sell_price=%s WHERE item_name=%s",
-                    [cost_price, selling_price, item]
-                )
-                con.commit()
-                print("Price updated successfully")
-
-            elif opt == 2:
-                new_quant = int(input(f"Enter new quantity for {item}: "))
-
-                cu.execute(
-                    "update inventory set quantity=%s WHERE item_name=%s",
-                    (new_quant, item)
-                )
-                con.commit()
-                print("Quantity updated successfully")
-
-            else:
-                print("Invalid choice")
+            print("This item alredy exists ")
+            
           else:
-              print("Item not found in  table")
-        else:
-          print("Inventory is empty")
-        ch = input("Do you want to update more items? (yes/no)").lower()
-        if ch == "no":
-          updating = False
+            cost_price = float(input("Enter item cost price : "))
+            selling_price = int(input("Enter item selling price: "))
+            quant = int(input("Enter item quantity : "))
 
-    #inventry details
-    elif choice == 4:
-      print("Full details of inventy ")
-      cu.execute("select * from inventory")
-      details = cu.fetchall()
-      for row in details:
-          print(row)
-    #for customers details 
-    elif choice == 5:
-      print("Full details of users ")
-      cu.execute("select * from customers")
-      details = cu.fetchall()
-      for row in details:
-          print(row)
+            cu.execute("insert into inventory (item_name,quantity,cost_price,sell_price) values (%s,%s,%s,%s)",[item,quant,cost_price,selling_price])
+            con.commit()
+            print("Item added successfully")
+          ch = input("Do you want to add more items? (yes/no)").lower()
+          if ch == "no":
+            adding = False
 
 
-    elif choice == 6:
-        cu.execute("select sum(revenue) from  sales")
-        print("Total Revenue:", cu.fetchone()[0])
+      #remove items
+      elif choice == 2:
+        removing = True
+        while removing:
+          cu.execute("select count(*) from inventory")
+          number_of_items = cu.fetchone()[0]
+          if number_of_items == 0:
+            print("store  is empty")
+          else:
+            cu.execute("select item_name from inventory")
+            item = input("Enter item name you want to remove  : ")
+            cu.execute("select 1 from inventory where item_name = %s",[item])
+            exists = cu.fetchone()
+          
+            if exists:
+              cu.execute("delete from inventory where item_name = %s",[item])
+              con.commit()
+            else:
+              print("item not found")
+            ch = input("Do you want to remove more items? (yes/no)").lower()
+            if ch == "no":
+              removing  = False
+              
 
-    elif choice == 7:
-      print("Thank you for using our system")
-      break
+      #update
+      elif choice == 3:
+        updating = True
+        while updating:
+          cu.execute("select count(*) from inventory")
+          exists = cu.fetchone()[0]
+          if exists>0:
+            cu.execute("select * from inventory")
+            items = cu.fetchall()
+            for i in items:
+              print(i)
+            item = input("Enter item name you want to update  : ")
+            cu.execute("select 1 from inventory where item_name = %s",[item])
+            exists = cu.fetchone()
+            if exists:
+              opt = int(input('''enter one option
+              1.update cost
+              2.update quantity '''))
+              if opt == 1:
+                  cost_price = float(input(f"Enter new cost price of {item}: "))
+                  selling_price = float(input(f"Enter new selling price of {item}: "))
+
+                  cu.execute(
+                      "UPDATE inventory SET cost_price=%s, sell_price=%s WHERE item_name=%s",
+                      [cost_price, selling_price, item]
+                  )
+                  con.commit()
+                  print("Price updated successfully")
+
+              elif opt == 2:
+                  new_quant = int(input(f"Enter new quantity for {item}: "))
+
+                  cu.execute(
+                      "update inventory set quantity=%s WHERE item_name=%s",
+                      (new_quant, item)
+                  )
+                  con.commit()
+                  print("Quantity updated successfully")
+
+              else:
+                  print("Invalid choice")
+            else:
+                print("Item not found in  table")
+          else:
+            print("Inventory is empty")
+          ch = input("Do you want to update more items? (yes/no)").lower()
+          if ch == "no":
+            updating = False
+
+      #inventry details
+      elif choice == 4:
+        print("Full details of inventy ")
+        view_table(table_name = "inventory")
+      #for customers details 
+      elif choice == 5:
+        print("Full details of users ")
+        view_table(table_name = "customers")
+
+
+      elif choice == 6:
+          cu.execute("select sum(revenue) from  sales")
+          print("Total Revenue:", cu.fetchone()[0])
+
+      elif choice == 7:
+        print("Thank you for using our system")
+        break
     else:
       print("Invalid choice")
+  else:
+    print("credintials are wrong")
 
 # customer side
 elif role == "customer":
@@ -159,8 +170,13 @@ elif role == "customer":
 
         # 1. add items to cart
         if choice == 1:
-            item = input("enter item name: ").lower()
-
+            print("fruits available")
+            cu.execute("select item_name,quantity,sell_price from inventory")
+            items = cu.fetchall()
+            for itm in items:
+              print(f"{itm[0]}  Quantity : {itm[1]}   price: {itm[2]}")
+              print()
+            item = input("Enter which item u want : ")
             cu.execute(
                 "select quantity, sell_price from inventory where item_name = %s",
                 [item]
@@ -194,15 +210,7 @@ elif role == "customer":
 
         # 2. view cart
         elif choice == 2:
-            cu.execute("select item_name, quantity, price from cart")
-            rows = cu.fetchall()
-
-            if not rows:
-                print("cart is empty")
-            else:
-                print("items in cart:")
-                for r in rows:
-                    print(r[0], "qty : ", r[1], " price : ", r[2])
+            view_table(table_name = "cart")
 
         # 3. remove item from cart
         elif choice == 3:
@@ -235,6 +243,16 @@ elif role == "customer":
 
         # 4. modify cart
         elif choice == 4:
+            cu.execute("select item_name, quantity from cart")
+            rows = cu.fetchall()
+
+            if not rows:
+                print("cart is empty")
+            else:
+                print("items in cart:")
+                for r in rows:
+                    print(r[0], "qty : ", r[1])
+              
             item = input("enter item name: ").lower()
 
             cu.execute(
@@ -339,4 +357,6 @@ elif role == "customer":
 
 else:
   print("Invalid role")
+
+
 
